@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - 5000:5000
+    environment:
+      - logstash=logstash
+    networks:
+      - elk
+    depends_on:
+      - logstash
+      - kibana
+      - elasticsearch
+  elasticsearch:
+    image: elasticsearch:7.17.8
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+    networks:
+      - elk
+  kibana:
+    image: kibana:7.17.8
+    ports:
+      - 5601:5601
+    networks:
+      - elk
+    depends_on: 
+      - elasticsearch
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.6.0
+    ports:
+      - 5959:5959
+    volumes:
+      - $PWD/pipeline:/usr/share/logstash/pipeline/
+    networks:
+      - elk
+    depends_on: 
+      - elasticsearch
+networks:
+  elk:
+    driver: bridge
